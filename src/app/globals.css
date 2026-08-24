@@ -1,26 +1,81 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FAF9F6;
+  --foreground: #121212;
+  --brand-orange: #F47920;
+  --brand-orange-hover: #E06710;
+  --brand-dark: #121212;
+  --brand-offwhite: #FAF9F6;
+  --brand-sand: #F5F2EC;
+  --brand-muted: #71717A;
+  --brand-border: #E4E4E7;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --font-geologica: var(--font-geologica), sans-serif;
+  --color-brand-orange: #F47920;
+  --color-brand-orange-hover: #E06710;
+  --color-brand-dark: #121212;
+  --color-brand-offwhite: #FAF9F6;
+  --color-brand-sand: #F5F2EC;
+  --color-brand-muted: #71717A;
+  --color-brand-border: #E4E4E7;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geologica);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* ==================================================
+   LANGUAGE VISIBILITY TOGGLE (.lang-en / .lang-ta)
+   ================================================== */
+
+/* Default / English Mode */
+html:not([data-lang="ta"]) .lang-en,
+html[data-lang="en"] .lang-en {
+  display: block;
+}
+
+html:not([data-lang="ta"]) span.lang-en,
+html:not([data-lang="ta"]) a.lang-en,
+html:not([data-lang="ta"]) label.lang-en,
+html[data-lang="en"] span.lang-en,
+html[data-lang="en"] a.lang-en,
+html[data-lang="en"] label.lang-en {
+  display: inline;
+}
+
+html:not([data-lang="ta"]) div.lang-en.flex,
+html[data-lang="en"] div.lang-en.flex {
+  display: flex;
+}
+
+html:not([data-lang="ta"]) .lang-ta,
+html[data-lang="en"] .lang-ta {
+  display: none !important;
+}
+
+/* Tamil Mode */
+html[data-lang="ta"] .lang-en {
+  display: none !important;
+}
+
+html[data-lang="ta"] .lang-ta {
+  display: block;
+}
+
+html[data-lang="ta"] span.lang-ta,
+html[data-lang="ta"] a.lang-ta,
+html[data-lang="ta"] label.lang-ta {
+  display: inline;
+}
+
+html[data-lang="ta"] div.lang-ta.flex {
+  display: flex;
+}
+
