@@ -20,6 +20,7 @@ interface ProjectFormProps {
 export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const defaultValues: ProjectFormValues = {
     name: initialData?.name || "",
@@ -94,8 +95,13 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
   const category = watch("category");
   const isInteriorMode = (category || "").toLowerCase().includes("interior");
 
+  const updateFormField = (name: keyof ProjectFormValues, val: any) => {
+    setValue(name as any, val, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+  };
+
   const onSubmit = async (values: ProjectFormValues) => {
     setSubmitting(true);
+    setFormError(null);
     try {
       // Auto-fill values if in Interior mode
       if (isInteriorMode) {
@@ -112,12 +118,26 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
         }
       }
 
+      let result;
       if (isEdit && initialData) {
-        await updateProject(initialData.id, values);
+        result = await updateProject(initialData.id, values);
       } else {
-        await createProject(values as any);
+        result = await createProject(values as any);
       }
-      router.push("/admin/projects");
+
+      if (result) {
+        router.push("/admin/projects");
+      } else {
+        setFormError("Failed to save project. Please check all fields and try again.");
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
+      console.error("CREATE PROJECT FAILED:", message);
+      setFormError(message);
     } finally {
       setSubmitting(false);
     }
@@ -125,6 +145,33 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 pb-12">
+      {/* Hidden Fields for Form Registration */}
+      <input type="hidden" {...register("name")} />
+      <input type="hidden" {...register("nameTa")} />
+      <input type="hidden" {...register("category")} />
+      <input type="hidden" {...register("categoryTa")} />
+      <input type="hidden" {...register("location")} />
+      <input type="hidden" {...register("locationTa")} />
+      <input type="hidden" {...register("area")} />
+      <input type="hidden" {...register("areaTa")} />
+      <input type="hidden" {...register("floors")} />
+      <input type="hidden" {...register("floorsTa")} />
+      <input type="hidden" {...register("bedrooms")} />
+      <input type="hidden" {...register("bedroomsTa")} />
+      <input type="hidden" {...register("shortDescription")} />
+      <input type="hidden" {...register("shortDescriptionTa")} />
+      <input type="hidden" {...register("projectOverview")} />
+      <input type="hidden" {...register("projectOverviewTa")} />
+      <input type="hidden" {...register("coverImage")} />
+
+      {/* Form Error Banner */}
+      {formError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center justify-between text-xs md:text-sm font-medium text-red-700">
+          <span>⚠️ {formError}</span>
+          <button type="button" onClick={() => setFormError(null)} className="text-red-500 hover:text-red-700 font-bold ml-4">✕</button>
+        </div>
+      )}
+
       {/* Mode Banner */}
       {isInteriorMode && (
         <div className="p-4 bg-[#F47920]/10 border border-[#F47920]/30 rounded-2xl flex items-center gap-3 text-xs md:text-sm font-medium text-[#F47920]">
@@ -135,7 +182,7 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
         </div>
       )}
 
-      {/* 1. Category Selection (FIELD 1 IS CATEGORY ONLY FOR INTERIOR) */}
+      {/* 1. Category Selection */}
       <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-xs space-y-5">
         <h3 className="text-base font-semibold text-gray-900 pb-2 border-b border-gray-100">
           1. Select Category *
@@ -150,7 +197,7 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
             value={watch("category") || "Residential"}
             onChange={(e) => {
               const selected = e.target.value;
-              setValue("category", selected, { shouldValidate: true, shouldDirty: true });
+              updateFormField("category", selected);
               const catMap: Record<string, string> = {
                 "Residential": "குடியிருப்பு",
                 "Architecture": "கட்டிடக்கலை",
@@ -160,7 +207,7 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
                 "Reconstruct": "மறுசீரமைப்பு",
               };
               if (catMap[selected]) {
-                setValue("categoryTa", catMap[selected]);
+                updateFormField("categoryTa", catMap[selected]);
               }
             }}
             className="w-full h-11 px-3.5 bg-white border-2 border-[#F47920]/40 focus:border-[#F47920] rounded-xl text-sm font-semibold text-gray-900 outline-none transition-all cursor-pointer shadow-2xs"
@@ -182,16 +229,16 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
               sourceValue={watch("name") || ""}
               targetValue={watch("nameTa") || ""}
               onSourceChange={(val) => {
-                setValue("name", val);
+                updateFormField("name", val);
                 if (!isEdit || !watch("slug")) {
                   const generatedSlug = val
                     .toLowerCase()
                     .replace(/[^a-z0-9]+/g, "-")
                     .replace(/(^-|-$)+/g, "");
-                  setValue("slug", generatedSlug);
+                  updateFormField("slug", generatedSlug);
                 }
               }}
-              onTargetChange={(val) => setValue("nameTa", val)}
+              onTargetChange={(val) => updateFormField("nameTa", val)}
               placeholderSource="e.g. Modern Villa Project"
               placeholderTarget="எ.கா. நவீன வில்லா திட்டம்"
               sourceError={errors.name?.message}
@@ -218,8 +265,8 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
                 label="Location (Optional)"
                 sourceValue={watch("location") || ""}
                 targetValue={watch("locationTa") || ""}
-                onSourceChange={(val) => setValue("location", val)}
-                onTargetChange={(val) => setValue("locationTa", val)}
+                onSourceChange={(val) => updateFormField("location", val)}
+                onTargetChange={(val) => updateFormField("locationTa", val)}
                 placeholderSource="Trichy, Tamil Nadu"
                 placeholderTarget="திருச்சி, தமிழ்நாடு"
               />
@@ -242,8 +289,8 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
         <ImageUploader
           coverImage={coverImage}
           galleryImages={galleryImages || []}
-          onCoverChange={(url) => setValue("coverImage", url, { shouldValidate: true, shouldDirty: true, shouldTouch: true })}
-          onGalleryChange={(urls) => setValue("galleryImages", urls, { shouldValidate: true, shouldDirty: true, shouldTouch: true })}
+          onCoverChange={(url) => updateFormField("coverImage", url)}
+          onGalleryChange={(urls) => updateFormField("galleryImages", urls)}
         />
         {errors.coverImage && (
           <p className="text-xs text-red-500 mt-1">{errors.coverImage.message}</p>
@@ -262,30 +309,30 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
               label="Project Area / Size"
               sourceValue={watch("area") || ""}
               targetValue={watch("areaTa") || ""}
-              onSourceChange={(val) => setValue("area", val)}
-              onTargetChange={(val) => setValue("areaTa", val)}
-              placeholderSource="3,500 sq.ft"
-              placeholderTarget="3,500 சதுர அடி"
+              onSourceChange={(val) => updateFormField("area", val)}
+              onTargetChange={(val) => updateFormField("areaTa", val)}
+              placeholderSource="e.g. 1,200 sq. ft."
+              placeholderTarget="e.g. 1,200 சதுர அடி"
             />
 
             <BilingualField
               label="Floors"
               sourceValue={watch("floors") || ""}
               targetValue={watch("floorsTa") || ""}
-              onSourceChange={(val) => setValue("floors", val)}
-              onTargetChange={(val) => setValue("floorsTa", val)}
-              placeholderSource="2 Floors (G + 1)"
-              placeholderTarget="2 தளங்கள் (தரை + 1)"
+              onSourceChange={(val) => updateFormField("floors", val)}
+              onTargetChange={(val) => updateFormField("floorsTa", val)}
+              placeholderSource="e.g. 2 Floors"
+              placeholderTarget="e.g. 2 தளங்கள்"
             />
 
             <BilingualField
               label="Bedrooms / Configuration"
               sourceValue={watch("bedrooms") || ""}
               targetValue={watch("bedroomsTa") || ""}
-              onSourceChange={(val) => setValue("bedrooms", val)}
-              onTargetChange={(val) => setValue("bedroomsTa", val)}
-              placeholderSource="4 BHK"
-              placeholderTarget="4 படுக்கையறைகள்"
+              onSourceChange={(val) => updateFormField("bedrooms", val)}
+              onTargetChange={(val) => updateFormField("bedroomsTa", val)}
+              placeholderSource="e.g. 3 BHK"
+              placeholderTarget="e.g. 3 படுக்கையறைகள்"
             />
           </div>
         </div>
@@ -304,8 +351,8 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
             rows={2}
             sourceValue={watch("shortDescription") || ""}
             targetValue={watch("shortDescriptionTa") || ""}
-            onSourceChange={(val) => setValue("shortDescription", val)}
-            onTargetChange={(val) => setValue("shortDescriptionTa", val)}
+            onSourceChange={(val) => updateFormField("shortDescription", val)}
+            onTargetChange={(val) => updateFormField("shortDescriptionTa", val)}
             placeholderSource="Concise overview for cards and meta descriptions..."
           />
 
@@ -315,8 +362,8 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
             rows={4}
             sourceValue={watch("projectOverview") || ""}
             targetValue={watch("projectOverviewTa") || ""}
-            onSourceChange={(val) => setValue("projectOverview", val)}
-            onTargetChange={(val) => setValue("projectOverviewTa", val)}
+            onSourceChange={(val) => updateFormField("projectOverview", val)}
+            onTargetChange={(val) => updateFormField("projectOverviewTa", val)}
             placeholderSource="Comprehensive description..."
           />
         </div>

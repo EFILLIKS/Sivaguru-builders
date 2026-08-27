@@ -19,7 +19,7 @@ export default function EditProjectPage() {
       if (!id) return;
       setLoading(true);
       try {
-        const data = await getProjectById(id);
+        const data = await getProjectById(decodeURIComponent(id));
         setProject(data);
       } finally {
         setLoading(false);

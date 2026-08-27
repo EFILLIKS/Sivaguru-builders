@@ -124,6 +124,11 @@ export function BilingualField({
               rows={rows}
               value={sourceValue}
               onChange={(e) => onSourceChange(e.target.value)}
+              onBlur={() => {
+                if (sourceValue?.trim() && !targetValue?.trim() && !translating) {
+                  handleTranslate("forward");
+                }
+              }}
               placeholder={placeholderSource}
               error={sourceError}
             />
@@ -131,6 +136,11 @@ export function BilingualField({
             <Input
               value={sourceValue}
               onChange={(e) => onSourceChange(e.target.value)}
+              onBlur={() => {
+                if (sourceValue?.trim() && !targetValue?.trim() && !translating) {
+                  handleTranslate("forward");
+                }
+              }}
               placeholder={placeholderSource}
               error={sourceError}
             />

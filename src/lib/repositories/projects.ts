@@ -13,14 +13,7 @@ function loadProjectsFromStorage(): Project[] {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        const parsed: Project[] = JSON.parse(saved);
-        // Ensure mock items exist in parsed list
-        initialMockProjects.forEach((mock) => {
-          if (!parsed.some((p) => p.id === mock.id || p.slug === mock.slug)) {
-            parsed.push(mock);
-          }
-        });
-        return parsed;
+        return JSON.parse(saved);
       } catch (e) {
         console.error("Failed to parse projects from storage:", e);
       }
@@ -36,47 +29,42 @@ function saveProjectsToStorage(projects: Project[]) {
   }
 }
 
-function getStoredGalleryImages(id: string, slug?: string): string[] | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const keyId = localStorage.getItem(`sivaguru_project_gallery_${id}`);
-    if (keyId) {
-      const parsed = JSON.parse(keyId);
-      if (Array.isArray(parsed)) return parsed;
-    }
-    if (slug) {
-      const keySlug = localStorage.getItem(`sivaguru_project_gallery_${slug}`);
-      if (keySlug) {
-        const parsed = JSON.parse(keySlug);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    }
-  } catch (e) {
-    // Ignore error
-  }
-  return null;
-}
-
-function saveStoredGalleryImages(id: string, slug: string | undefined, galleryImages: string[]) {
-  if (typeof window === "undefined" || !galleryImages) return;
-  try {
-    const json = JSON.stringify(galleryImages);
-    if (id) localStorage.setItem(`sivaguru_project_gallery_${id}`, json);
-    if (slug) localStorage.setItem(`sivaguru_project_gallery_${slug}`, json);
-  } catch (e) {
-    // Ignore error
-  }
-}
-
 let memoryProjects: Project[] = [...initialMockProjects];
+
+function mapDbRowToProject(row: any): Project {
+  return {
+    id: row.id,
+    name: row.name_en || row.name || "",
+    nameTa: row.name_ta || "",
+    slug: row.slug || row.id,
+    category: row.category || "Residential",
+    categoryTa: row.category_ta || "",
+    location: row.location || "",
+    locationTa: row.location_ta || "",
+    year: row.year ? String(row.year) : "2026",
+    status: row.published !== undefined ? (row.published ? "Published" : "Draft") : (row.status || "Published"),
+    area: row.built_up_area || row.area || "",
+    areaTa: row.built_up_area_ta || "",
+    floors: row.floors ? String(row.floors) : "",
+    floorsTa: row.floors_ta || "",
+    bedrooms: row.bedrooms ? String(row.bedrooms) : "",
+    bedroomsTa: row.bedrooms_ta || "",
+    shortDescription: row.short_description_en || row.short_description || "",
+    shortDescriptionTa: row.short_description_ta || "",
+    projectOverview: row.overview_en || row.overview || "",
+    projectOverviewTa: row.overview_ta || "",
+    coverImage: row.cover_image_url || row.cover_image || "",
+    galleryImages: Array.isArray(row.gallery_images) ? row.gallery_images : [],
+    createdAt: row.created_at || new Date().toISOString(),
+    updatedAt: row.updated_at || new Date().toISOString(),
+  };
+}
 
 export async function getProjects(filters?: {
   search?: string;
   status?: string;
   category?: string;
 }): Promise<Project[]> {
-  const localProjects = typeof window !== "undefined" ? loadProjectsFromStorage() : memoryProjects;
-
   try {
     const supabase = createClient();
     if (supabase) {
@@ -91,57 +79,11 @@ export async function getProjects(filters?: {
 
       const { data, error } = await query;
       if (!error && data && data.length > 0) {
-        const mapped: Project[] = data.map((row: any) => {
-          const localItem = localProjects.find((p) => p.id === row.id || p.slug === row.slug);
-          const persistentGallery = getStoredGalleryImages(row.id, row.slug);
+        let mapped = data.map(mapDbRowToProject);
 
-          let resolvedGallery: string[];
-          if (localItem && localItem.galleryImages && localItem.galleryImages.length > 0) {
-            resolvedGallery = localItem.galleryImages;
-          } else if (row.gallery_images && Array.isArray(row.gallery_images) && row.gallery_images.length > 0) {
-            resolvedGallery = row.gallery_images;
-          } else if (persistentGallery && persistentGallery.length > 0) {
-            resolvedGallery = persistentGallery;
-          } else {
-            resolvedGallery = [];
-          }
-
-          return {
-            id: row.id,
-            name: localItem?.name || row.name_en || row.name,
-            nameTa: localItem?.nameTa || row.name_ta,
-            slug: row.slug,
-            category: localItem?.category || row.category,
-            categoryTa: localItem?.categoryTa || row.category_ta,
-            location: localItem?.location ?? row.location,
-            locationTa: localItem?.locationTa ?? row.location_ta,
-            year: localItem?.year || (row.year ? String(row.year) : "2026"),
-            status: localItem?.status || (row.published ? "Published" : "Draft"),
-            area: localItem?.area || row.built_up_area || row.area,
-            floors: localItem?.floors || (row.floors ? String(row.floors) : ""),
-            bedrooms: localItem?.bedrooms || (row.bedrooms ? String(row.bedrooms) : ""),
-            shortDescription: localItem?.shortDescription || row.short_description_en || row.short_description,
-            shortDescriptionTa: localItem?.shortDescriptionTa || row.short_description_ta,
-            projectOverview: localItem?.projectOverview || row.overview_en || row.overview,
-            projectOverviewTa: localItem?.projectOverviewTa || row.overview_ta,
-            coverImage: localItem?.coverImage || row.cover_image_url || row.cover_image || "",
-            galleryImages: resolvedGallery,
-            createdAt: row.created_at || new Date().toISOString(),
-            updatedAt: localItem?.updatedAt || row.updated_at || new Date().toISOString(),
-          };
-        });
-
-        // Merge local projects not present in DB
-        localProjects.forEach((lp) => {
-          if (!mapped.some((m) => m.id === lp.id || m.slug === lp.slug)) {
-            mapped.push(lp);
-          }
-        });
-
-        let resultsList = mapped;
         if (filters?.search) {
           const q = filters.search.toLowerCase();
-          resultsList = resultsList.filter(
+          mapped = mapped.filter(
             (p) =>
               (p.name && p.name.toLowerCase().includes(q)) ||
               (p.nameTa && p.nameTa.toLowerCase().includes(q)) ||
@@ -149,13 +91,15 @@ export async function getProjects(filters?: {
               (p.category && p.category.toLowerCase().includes(q))
           );
         }
-        return resultsList;
+        return mapped;
       }
     }
   } catch (e) {
-    // Supabase DB fallback
+    console.error("Supabase getProjects error:", e);
   }
 
+  // Fallback to local storage only if Supabase returns 0 records or is unreachable
+  const localProjects = typeof window !== "undefined" ? loadProjectsFromStorage() : memoryProjects;
   let results = [...localProjects];
 
   if (filters?.search) {
@@ -186,9 +130,6 @@ export async function getProjects(filters?: {
 }
 
 export async function getProjectById(id: string): Promise<Project | null> {
-  const localProjects = typeof window !== "undefined" ? loadProjectsFromStorage() : memoryProjects;
-  const localFound = localProjects.find((p) => p.id === id || p.slug === id);
-
   try {
     const supabase = createClient();
     if (supabase) {
@@ -196,203 +137,251 @@ export async function getProjectById(id: string): Promise<Project | null> {
       if (isUuid(id)) {
         query = query.eq("id", id);
       } else {
-        query = query.eq("slug", id);
+        query = query.or(`id.eq.${id},slug.eq.${id}`);
       }
 
       const { data, error } = await query.maybeSingle();
-
       if (!error && data) {
-        const persistentGallery = getStoredGalleryImages(data.id, data.slug);
-        let resolvedGallery: string[];
-
-        if (localFound && localFound.galleryImages && localFound.galleryImages.length > 0) {
-          resolvedGallery = localFound.galleryImages;
-        } else if (data.gallery_images && Array.isArray(data.gallery_images) && data.gallery_images.length > 0) {
-          resolvedGallery = data.gallery_images;
-        } else if (persistentGallery && persistentGallery.length > 0) {
-          resolvedGallery = persistentGallery;
-        } else {
-          resolvedGallery = [];
-        }
-
-        return {
-          id: data.id,
-          name: localFound?.name || data.name_en || data.name,
-          nameTa: localFound?.nameTa || data.name_ta,
-          slug: data.slug,
-          category: localFound?.category || data.category,
-          categoryTa: localFound?.categoryTa || data.category_ta,
-          location: localFound?.location ?? data.location,
-          locationTa: localFound?.locationTa ?? data.location_ta,
-          year: localFound?.year || (data.year ? String(data.year) : "2026"),
-          status: localFound?.status || (data.published ? "Published" : "Draft"),
-          area: localFound?.area || data.built_up_area || data.area,
-          floors: localFound?.floors || (data.floors ? String(data.floors) : ""),
-          bedrooms: localFound?.bedrooms || (data.bedrooms ? String(data.bedrooms) : ""),
-          shortDescription: localFound?.shortDescription || data.short_description_en || data.short_description,
-          shortDescriptionTa: localFound?.shortDescriptionTa || data.short_description_ta,
-          projectOverview: localFound?.projectOverview || data.overview_en || data.overview,
-          projectOverviewTa: localFound?.projectOverviewTa || data.overview_ta,
-          coverImage: localFound?.coverImage || data.cover_image_url || data.cover_image || "",
-          galleryImages: resolvedGallery,
-          createdAt: data.created_at || new Date().toISOString(),
-          updatedAt: localFound?.updatedAt || data.updated_at || new Date().toISOString(),
-        };
+        return mapDbRowToProject(data);
       }
     }
   } catch (e) {
-    // Fallback to local storage query
+    console.error("Supabase getProjectById error:", e);
   }
 
-  return localFound || null;
+  const localProjects = typeof window !== "undefined" ? loadProjectsFromStorage() : memoryProjects;
+  return localProjects.find((p) => p.id === id || p.slug === id) || null;
+}
+
+function getSupabaseErrorMessage(error: unknown): string {
+  if (!error) {
+    return "Unknown Supabase error";
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const e = error as Record<string, unknown>;
+
+    const parts = [
+      typeof e.message === "string" ? e.message : null,
+      typeof e.details === "string" ? e.details : null,
+      typeof e.hint === "string" ? e.hint : null,
+      typeof e.code === "string" ? `code=${e.code}` : null,
+      typeof e.status === "number" ? `status=${e.status}` : null,
+    ].filter(Boolean);
+
+    if (parts.length > 0) {
+      return parts.join(" | ");
+    }
+  }
+
+  return String(error);
+}
+
+function isRealSupabaseError(error: any): boolean {
+  if (!error) return false;
+  if (typeof error === "object" && error !== null) {
+    if (error.message || error.code || error.details || error.hint || error.status) {
+      return true;
+    }
+    if (Object.keys(error).length === 0) {
+      return false;
+    }
+  }
+  return Boolean(error);
 }
 
 export async function createProject(data: Omit<Project, "id" | "createdAt" | "updatedAt">): Promise<Project> {
-  let createdId = `proj-${Date.now()}`;
-  const gallery = data.galleryImages || [];
-
   try {
     const supabase = createClient();
     if (supabase) {
-      const { data: inserted, error } = await supabase
-        .from("projects")
-        .insert({
-          slug: data.slug || `proj-${Date.now()}`,
-          name_en: data.name,
-          name_ta: data.nameTa || data.name,
-          category: data.category,
-          service: data.category,
-          location: data.location,
-          year: data.year ? parseInt(data.year) : 2026,
-          status: data.status,
-          built_up_area: data.area,
-          short_description_en: data.shortDescription,
-          short_description_ta: data.shortDescriptionTa || data.shortDescription,
-          overview_en: data.projectOverview,
-          overview_ta: data.projectOverviewTa || data.projectOverview,
-          cover_image_url: data.coverImage,
-          cover_image_public_id: data.coverImage,
-          gallery_images: gallery,
-          published: data.status === "Published",
-        })
-        .select()
-        .single();
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      console.log("SUPABASE AUTH USER:", authData?.user ? authData.user.id : "NO AUTH USER");
+      if (authError && isRealSupabaseError(authError)) {
+        console.log("SUPABASE AUTH ERROR:", getSupabaseErrorMessage(authError));
+      }
 
-      if (!error && inserted) {
-        createdId = inserted.id;
+      const payload = {
+        slug: data.slug || `proj-${Date.now()}`,
+        name_en: data.name || "Untitled Project",
+        name_ta: data.nameTa || data.name || "Untitled Project",
+        category: data.category || "Residential",
+        service: data.category || "Residential",
+        location: data.location || "",
+        location_ta: data.locationTa || "",
+        year: data.year ? parseInt(String(data.year)) || 2026 : 2026,
+        built_up_area: data.area || null,
+        floors: data.floors ? parseInt(String(data.floors)) || null : null,
+        bedrooms: data.bedrooms ? parseInt(String(data.bedrooms)) || null : null,
+        short_description_en: data.shortDescription || "",
+        short_description_ta: data.shortDescriptionTa || "",
+        overview_en: data.projectOverview || "",
+        overview_ta: data.projectOverviewTa || "",
+        cover_image_url: data.coverImage || "/images/house-image.jpg",
+        cover_image_public_id: data.coverImage || "/images/house-image.jpg",
+        gallery_images: data.galleryImages || [],
+        published: data.status === "Published",
+      };
+
+      console.log("PROJECT INSERT PAYLOAD:", JSON.stringify(payload, null, 2));
+
+      const { data: insertedRows, error: insertError } = await supabase
+        .from("projects")
+        .insert(payload)
+        .select();
+
+      const errorMessage = insertError && isRealSupabaseError(insertError) ? getSupabaseErrorMessage(insertError) : null;
+      console.log("PROJECT INSERT ERROR:", errorMessage || "NONE");
+      console.log("PROJECT INSERT SUCCESS:", !errorMessage && insertedRows && insertedRows.length > 0);
+      console.log("PROJECT INSERT ROW COUNT:", insertedRows?.length ?? 0);
+
+      if (errorMessage) {
+        console.error("SUPABASE ERROR MESSAGE:", errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      if (insertedRows && insertedRows.length > 0) {
+        return mapDbRowToProject(insertedRows[0]);
       }
     }
-  } catch (e) {
-    console.warn("Supabase insert fallback to local storage:", e);
+  } catch (e: any) {
+    console.error("createProject caught error:", e);
+    throw e;
   }
 
-  saveStoredGalleryImages(createdId, data.slug, gallery);
-
-  const currentProjects = typeof window !== "undefined" ? loadProjectsFromStorage() : memoryProjects;
-
+  const createdId = `proj-${Date.now()}`;
   const newProject: Project = {
     ...data,
     id: createdId,
-    galleryImages: gallery,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
+  const currentProjects = typeof window !== "undefined" ? loadProjectsFromStorage() : memoryProjects;
   const updatedProjects = [newProject, ...currentProjects];
-
-  if (typeof window !== "undefined") {
-    saveProjectsToStorage(updatedProjects);
-  } else {
-    memoryProjects = updatedProjects;
-  }
-
+  saveProjectsToStorage(updatedProjects);
   return newProject;
 }
 
 export async function updateProject(id: string, data: Partial<Omit<Project, "id" | "createdAt">>): Promise<Project | null> {
-  const gallery = data.galleryImages;
-  if (gallery) {
-    saveStoredGalleryImages(id, data.slug, gallery);
-  }
-
   try {
     const supabase = createClient();
     if (supabase) {
       const payload: any = {
-        name_en: data.name,
-        name_ta: data.nameTa,
-        category: data.category,
-        category_ta: data.categoryTa,
-        location: data.location,
-        location_ta: data.locationTa,
-        built_up_area: data.area,
-        floors: data.floors,
-        bedrooms: data.bedrooms,
-        short_description_en: data.shortDescription,
-        short_description_ta: data.shortDescriptionTa,
-        overview_en: data.projectOverview,
-        overview_ta: data.projectOverviewTa,
-        published: data.status === "Published",
+        updated_at: new Date().toISOString(),
       };
-
-      if (data.year) {
-        payload.year = parseInt(data.year) || 2026;
+      if (data.name !== undefined) payload.name_en = data.name;
+      if (data.nameTa !== undefined) payload.name_ta = data.nameTa;
+      if (data.slug !== undefined) payload.slug = data.slug;
+      if (data.category !== undefined) {
+        payload.category = data.category;
+        payload.service = data.category;
+      }
+      if (data.location !== undefined) payload.location = data.location;
+      if (data.locationTa !== undefined) payload.location_ta = data.locationTa;
+      if (data.area !== undefined) payload.built_up_area = data.area || null;
+      if (data.shortDescription !== undefined) payload.short_description_en = data.shortDescription;
+      if (data.shortDescriptionTa !== undefined) payload.short_description_ta = data.shortDescriptionTa;
+      if (data.projectOverview !== undefined) payload.overview_en = data.projectOverview;
+      if (data.projectOverviewTa !== undefined) payload.overview_ta = data.projectOverviewTa;
+      if (data.status !== undefined) payload.published = data.status === "Published";
+      if (data.year !== undefined) payload.year = parseInt(String(data.year)) || 2026;
+      if (data.floors !== undefined) {
+        const parsed = parseInt(String(data.floors));
+        payload.floors = isNaN(parsed) ? null : parsed;
+      }
+      if (data.bedrooms !== undefined) {
+        const parsed = parseInt(String(data.bedrooms));
+        payload.bedrooms = isNaN(parsed) ? null : parsed;
       }
       if (data.coverImage !== undefined) {
-        payload.cover_image_url = data.coverImage;
-        payload.cover_image_public_id = data.coverImage;
+        payload.cover_image_url = data.coverImage || "/images/house-image.jpg";
+        payload.cover_image_public_id = data.coverImage || "/images/house-image.jpg";
       }
-      if (gallery !== undefined) {
-        payload.gallery_images = gallery;
+      if (data.galleryImages !== undefined) {
+        payload.gallery_images = data.galleryImages;
       }
+
+      console.log("PROJECT UPDATE PAYLOAD:", JSON.stringify(payload, null, 2));
 
       let query = supabase.from("projects").update(payload);
-
       if (isUuid(id)) {
         query = query.eq("id", id);
       } else {
-        query = query.eq("slug", data.slug || id);
+        query = query.or(`id.eq.${id},slug.eq.${id}`);
       }
 
-      const { data: updatedRow, error } = await query.select();
+      const { data: updatedRows, error: updateError } = await query.select();
 
-      if (error) {
-        console.error("Supabase update error:", error);
-      } else {
-        console.log("Supabase update success for:", id, updatedRow);
+      const errorMessage = updateError && isRealSupabaseError(updateError) ? getSupabaseErrorMessage(updateError) : null;
+      console.log("PROJECT UPDATE ERROR:", errorMessage || "NONE");
+
+      if (errorMessage) {
+        console.error("SUPABASE UPDATE ERROR MESSAGE:", errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      if (updatedRows && updatedRows.length > 0) {
+        return mapDbRowToProject(updatedRows[0]);
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        const insertPayload = {
+          slug: data.slug || id,
+          name_en: data.name || "Untitled Project",
+          name_ta: data.nameTa || data.name || "Untitled Project",
+          category: data.category || "Residential",
+          service: data.category || "Residential",
+          location: data.location || "",
+          location_ta: data.locationTa || "",
+          year: data.year ? parseInt(String(data.year)) || 2026 : 2026,
+          built_up_area: data.area || null,
+          floors: data.floors ? parseInt(String(data.floors)) || null : null,
+          bedrooms: data.bedrooms ? parseInt(String(data.bedrooms)) || null : null,
+          short_description_en: data.shortDescription || "",
+          short_description_ta: data.shortDescriptionTa || "",
+          overview_en: data.projectOverview || "",
+          overview_ta: data.projectOverviewTa || "",
+          cover_image_url: data.coverImage || "/images/house-image.jpg",
+          cover_image_public_id: data.coverImage || "/images/house-image.jpg",
+          gallery_images: data.galleryImages || [],
+          published: data.status === "Published",
+        };
+
+        const { data: fallbackRows, error: fallbackError } = await supabase
+          .from("projects")
+          .insert(insertPayload)
+          .select();
+
+        const fallbackErrorMessage = fallbackError && isRealSupabaseError(fallbackError) ? getSupabaseErrorMessage(fallbackError) : null;
+        if (fallbackErrorMessage) {
+          console.error("SUPABASE FALLBACK INSERT ERROR MESSAGE:", fallbackErrorMessage);
+          throw new Error(fallbackErrorMessage);
+        }
+
+        if (fallbackRows && fallbackRows.length > 0) {
+          return mapDbRowToProject(fallbackRows[0]);
+        }
       }
     }
-  } catch (e) {
-    console.warn("Supabase update fallback to local storage:", e);
+  } catch (e: any) {
+    console.error("updateProject caught error:", e);
+    throw e;
   }
 
   const currentProjects = typeof window !== "undefined" ? loadProjectsFromStorage() : memoryProjects;
   let index = currentProjects.findIndex((p) => p.id === id || p.slug === id || (data.slug && p.slug === data.slug));
-
-  if (index === -1) {
-    const mockMatch = initialMockProjects.find((p) => p.id === id || p.slug === id);
-    if (mockMatch) {
-      currentProjects.push({ ...mockMatch });
-      index = currentProjects.length - 1;
-    }
-  }
-
   if (index !== -1) {
     const updated: Project = {
       ...currentProjects[index],
       ...data,
-      galleryImages: gallery !== undefined ? gallery : currentProjects[index].galleryImages,
       updatedAt: new Date().toISOString(),
     };
-
     currentProjects[index] = updated;
-
-    if (typeof window !== "undefined") {
-      saveProjectsToStorage(currentProjects);
-    } else {
-      memoryProjects = currentProjects;
-    }
-
+    saveProjectsToStorage(currentProjects);
     return updated;
   }
   return null;
@@ -406,16 +395,15 @@ export async function deleteProject(id: string): Promise<boolean> {
       if (isUuid(id)) {
         query = query.eq("id", id);
       } else {
-        query = query.eq("slug", id);
+        query = query.or(`id.eq.${id},slug.eq.${id}`);
       }
-      await query;
+      const { error } = await query;
+      if (!error) {
+        return true;
+      }
     }
   } catch (e) {
-    console.warn("Supabase delete fallback to local storage:", e);
-  }
-
-  if (typeof window !== "undefined") {
-    localStorage.removeItem(`sivaguru_project_gallery_${id}`);
+    console.error("Supabase deleteProject exception:", e);
   }
 
   const currentProjects = typeof window !== "undefined" ? loadProjectsFromStorage() : memoryProjects;
@@ -423,11 +411,7 @@ export async function deleteProject(id: string): Promise<boolean> {
   const filtered = currentProjects.filter((p) => p.id !== id && p.slug !== id);
 
   if (filtered.length < initialLen) {
-    if (typeof window !== "undefined") {
-      saveProjectsToStorage(filtered);
-    } else {
-      memoryProjects = filtered;
-    }
+    saveProjectsToStorage(filtered);
     return true;
   }
   return false;
