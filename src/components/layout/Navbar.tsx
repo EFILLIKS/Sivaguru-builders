@@ -306,11 +306,7 @@ function LanguageToggle({ lang, setLang, idPrefix }: LanguageToggleProps) {
         `}
       >
         {lang === "en" && (
-          <motion.div
-            layoutId={`${idPrefix}-active-lang-pill`}
-            transition={{ type: "spring", stiffness: 500, damping: 35 }}
-            className="absolute inset-0 bg-white rounded-[4px] -z-10 shadow-sm"
-          />
+          <div className="absolute inset-0 bg-white rounded-[4px] -z-10 shadow-sm" />
         )}
         En
       </button>
@@ -338,11 +334,7 @@ function LanguageToggle({ lang, setLang, idPrefix }: LanguageToggleProps) {
         `}
       >
         {lang === "ta" && (
-          <motion.div
-            layoutId={`${idPrefix}-active-lang-pill`}
-            transition={{ type: "spring", stiffness: 500, damping: 35 }}
-            className="absolute inset-0 bg-white rounded-[4px] -z-10 shadow-sm"
-          />
+          <div className="absolute inset-0 bg-white rounded-[4px] -z-10 shadow-sm" />
         )}
         தமிழ்
       </button>
