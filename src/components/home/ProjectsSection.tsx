@@ -144,10 +144,6 @@ function InteriorPinterestGrid({ projects }: { projects: Project[] }) {
   if (photos.length === 0) {
     return (
       <div className="py-16 text-center text-gray-500 font-medium w-full">
-        <p className="max-w-2xl mx-auto mb-6 text-black/70 text-[14px] sm:text-[15px] leading-relaxed">
-          <span className="lang-en">Transforming spaces with custom cabinetry, ergonomic layouts, modular kitchens, and ambient lighting tailored to your lifestyle.</span>
-          <span className="lang-ta">உங்கள் வாழ்க்கை முறைக்கேற்ப தனிப்பயனாக்கப்பட்ட அலமாரிகள், மாடுலர் சமையலறைகள் மற்றும் சூடான விளக்குகளுடன் உங்கள் இடங்களை மாற்றியமைக்கிறோம்.</span>
-        </p>
         <span className="lang-en">No interior design photos uploaded yet. Upload images in Admin Panel to showcase here!</span>
         <span className="lang-ta">உள் வடிவமைப்பு புகைப்படங்கள் எதுவும் பதிவேற்றப்படவில்லை.</span>
       </div>
@@ -156,10 +152,6 @@ function InteriorPinterestGrid({ projects }: { projects: Project[] }) {
 
   return (
     <>
-      <div className="text-center max-w-2xl mx-auto mb-6 px-4 text-black/70 text-[14px] sm:text-[15px] leading-relaxed">
-        <span className="lang-en">Transforming spaces with custom cabinetry, ergonomic layouts, modular kitchens, and ambient lighting tailored to your lifestyle.</span>
-        <span className="lang-ta">உங்கள் வாழ்க்கை முறைக்கேற்ப தனிப்பயனாக்கப்பட்ட அலமாரிகள், மாடுலர் சமையலறைகள் மற்றும் சூடான விளக்குகளுடன் உங்கள் இடங்களை மாற்றியமைக்கிறோம்.</span>
-      </div>
       <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4 w-full max-w-[1400px] mb-10">
         {photos.map((photo, index) => {
           // Staggered heights for Pinterest aesthetic
@@ -305,14 +297,6 @@ function ProjectsSectionContent({ hideViewAll }: ProjectsSectionContentProps) {
           <span className="lang-en">{isInteriorCategory ? "Interior Design Portfolio" : "Projects We Done"}</span>
           <span className="lang-ta">{isInteriorCategory ? "உள் வடிவமைப்பு காட்சியகம்" : "நாங்கள் முடித்த திட்டங்கள்"}</span>
         </h2>
-
-        {/* Interior Design Paragraph */}
-        {isInteriorCategory && (
-          <p className="text-center font-['Geologica',sans-serif] text-[14px] sm:text-[15px] leading-relaxed text-black/70 max-w-[750px] mx-auto mt-1">
-            <span className="lang-en">Transforming spaces with custom cabinetry, ergonomic layouts, modular kitchens, and ambient lighting tailored to your lifestyle.</span>
-            <span className="lang-ta">உங்கள் வாழ்க்கை முறைக்கேற்ப தனிப்பயனாக்கப்பட்ட அலமாரிகள், மாடுலர் சமையலறைகள் மற்றும் சூடான விளக்குகளுடன் உங்கள் இடங்களை மாற்றியமைக்கிறோம்.</span>
-          </p>
-        )}
       </div>
 
       {/* Category Filter Tabs Bar */}
