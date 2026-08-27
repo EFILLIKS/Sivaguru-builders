@@ -52,11 +52,42 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<ProjectFormValues>({
     resolver: zodResolver(ProjectSchema) as any,
     defaultValues,
   });
+
+  React.useEffect(() => {
+    if (initialData) {
+      reset({
+        name: initialData.name || "",
+        nameTa: initialData.nameTa || "",
+        slug: initialData.slug || "",
+        category: initialData.category || "Residential",
+        categoryTa: initialData.categoryTa || "",
+        location: initialData.location || "",
+        locationTa: initialData.locationTa || "",
+        year: initialData.year || new Date().getFullYear().toString(),
+        status: initialData.status || "Published",
+        area: initialData.area || "",
+        areaTa: initialData.areaTa || "",
+        floors: initialData.floors || "",
+        floorsTa: initialData.floorsTa || "",
+        bedrooms: initialData.bedrooms || "",
+        bedroomsTa: initialData.bedroomsTa || "",
+        shortDescription: initialData.shortDescription || "",
+        shortDescriptionTa: initialData.shortDescriptionTa || "",
+        projectOverview: initialData.projectOverview || "",
+        projectOverviewTa: initialData.projectOverviewTa || "",
+        coverImage: initialData.coverImage || "",
+        galleryImages: initialData.galleryImages || [],
+        seoTitle: initialData.seoTitle || "",
+        seoDescription: initialData.seoDescription || "",
+      });
+    }
+  }, [initialData, reset]);
 
   const coverImage = watch("coverImage");
   const galleryImages = watch("galleryImages");

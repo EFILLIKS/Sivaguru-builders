@@ -13,7 +13,14 @@ function loadProjectsFromStorage(): Project[] {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: Project[] = JSON.parse(saved);
+        // Ensure mock items exist in parsed list
+        initialMockProjects.forEach((mock) => {
+          if (!parsed.some((p) => p.id === mock.id || p.slug === mock.slug)) {
+            parsed.push(mock);
+          }
+        });
+        return parsed;
       } catch (e) {
         console.error("Failed to parse projects from storage:", e);
       }
@@ -89,39 +96,46 @@ export async function getProjects(filters?: {
           const persistentGallery = getStoredGalleryImages(row.id, row.slug);
 
           let resolvedGallery: string[];
-          if (row.gallery_images && Array.isArray(row.gallery_images) && row.gallery_images.length > 0) {
+          if (localItem && localItem.galleryImages && localItem.galleryImages.length > 0) {
+            resolvedGallery = localItem.galleryImages;
+          } else if (row.gallery_images && Array.isArray(row.gallery_images) && row.gallery_images.length > 0) {
             resolvedGallery = row.gallery_images;
           } else if (persistentGallery && persistentGallery.length > 0) {
             resolvedGallery = persistentGallery;
-          } else if (localItem && localItem.galleryImages && localItem.galleryImages.length > 0) {
-            resolvedGallery = localItem.galleryImages;
           } else {
             resolvedGallery = [];
           }
 
           return {
             id: row.id,
-            name: row.name_en || row.name,
-            nameTa: row.name_ta,
+            name: localItem?.name || row.name_en || row.name,
+            nameTa: localItem?.nameTa || row.name_ta,
             slug: row.slug,
-            category: row.category,
-            categoryTa: row.category_ta,
-            location: row.location,
-            locationTa: row.location_ta,
-            year: row.year ? String(row.year) : "2026",
-            status: row.published ? "Published" : "Draft",
-            area: row.built_up_area || row.area,
-            floors: row.floors ? String(row.floors) : "",
-            bedrooms: row.bedrooms ? String(row.bedrooms) : "",
-            shortDescription: row.short_description_en || row.short_description,
-            shortDescriptionTa: row.short_description_ta,
-            projectOverview: row.overview_en || row.overview,
-            projectOverviewTa: row.overview_ta,
-            coverImage: row.cover_image_url || row.cover_image || "",
+            category: localItem?.category || row.category,
+            categoryTa: localItem?.categoryTa || row.category_ta,
+            location: localItem?.location ?? row.location,
+            locationTa: localItem?.locationTa ?? row.location_ta,
+            year: localItem?.year || (row.year ? String(row.year) : "2026"),
+            status: localItem?.status || (row.published ? "Published" : "Draft"),
+            area: localItem?.area || row.built_up_area || row.area,
+            floors: localItem?.floors || (row.floors ? String(row.floors) : ""),
+            bedrooms: localItem?.bedrooms || (row.bedrooms ? String(row.bedrooms) : ""),
+            shortDescription: localItem?.shortDescription || row.short_description_en || row.short_description,
+            shortDescriptionTa: localItem?.shortDescriptionTa || row.short_description_ta,
+            projectOverview: localItem?.projectOverview || row.overview_en || row.overview,
+            projectOverviewTa: localItem?.projectOverviewTa || row.overview_ta,
+            coverImage: localItem?.coverImage || row.cover_image_url || row.cover_image || "",
             galleryImages: resolvedGallery,
             createdAt: row.created_at || new Date().toISOString(),
-            updatedAt: row.updated_at || new Date().toISOString(),
+            updatedAt: localItem?.updatedAt || row.updated_at || new Date().toISOString(),
           };
+        });
+
+        // Merge local projects not present in DB
+        localProjects.forEach((lp) => {
+          if (!mapped.some((m) => m.id === lp.id || m.slug === lp.slug)) {
+            mapped.push(lp);
+          }
         });
 
         let resultsList = mapped;
@@ -191,38 +205,38 @@ export async function getProjectById(id: string): Promise<Project | null> {
         const persistentGallery = getStoredGalleryImages(data.id, data.slug);
         let resolvedGallery: string[];
 
-        if (data.gallery_images && Array.isArray(data.gallery_images) && data.gallery_images.length > 0) {
+        if (localFound && localFound.galleryImages && localFound.galleryImages.length > 0) {
+          resolvedGallery = localFound.galleryImages;
+        } else if (data.gallery_images && Array.isArray(data.gallery_images) && data.gallery_images.length > 0) {
           resolvedGallery = data.gallery_images;
         } else if (persistentGallery && persistentGallery.length > 0) {
           resolvedGallery = persistentGallery;
-        } else if (localFound && localFound.galleryImages && localFound.galleryImages.length > 0) {
-          resolvedGallery = localFound.galleryImages;
         } else {
           resolvedGallery = [];
         }
 
         return {
           id: data.id,
-          name: data.name_en || data.name,
-          nameTa: data.name_ta,
+          name: localFound?.name || data.name_en || data.name,
+          nameTa: localFound?.nameTa || data.name_ta,
           slug: data.slug,
-          category: data.category,
-          categoryTa: data.category_ta,
-          location: data.location,
-          locationTa: data.location_ta,
-          year: data.year ? String(data.year) : "2026",
-          status: data.published ? "Published" : "Draft",
-          area: data.built_up_area || data.area,
-          floors: data.floors ? String(data.floors) : "",
-          bedrooms: data.bedrooms ? String(data.bedrooms) : "",
-          shortDescription: data.short_description_en || data.short_description,
-          shortDescriptionTa: data.short_description_ta,
-          projectOverview: data.overview_en || data.overview,
-          projectOverviewTa: data.overview_ta,
-          coverImage: data.cover_image_url || data.cover_image || "",
+          category: localFound?.category || data.category,
+          categoryTa: localFound?.categoryTa || data.category_ta,
+          location: localFound?.location ?? data.location,
+          locationTa: localFound?.locationTa ?? data.location_ta,
+          year: localFound?.year || (data.year ? String(data.year) : "2026"),
+          status: localFound?.status || (data.published ? "Published" : "Draft"),
+          area: localFound?.area || data.built_up_area || data.area,
+          floors: localFound?.floors || (data.floors ? String(data.floors) : ""),
+          bedrooms: localFound?.bedrooms || (data.bedrooms ? String(data.bedrooms) : ""),
+          shortDescription: localFound?.shortDescription || data.short_description_en || data.short_description,
+          shortDescriptionTa: localFound?.shortDescriptionTa || data.short_description_ta,
+          projectOverview: localFound?.projectOverview || data.overview_en || data.overview,
+          projectOverviewTa: localFound?.projectOverviewTa || data.overview_ta,
+          coverImage: localFound?.coverImage || data.cover_image_url || data.cover_image || "",
           galleryImages: resolvedGallery,
           createdAt: data.created_at || new Date().toISOString(),
-          updatedAt: data.updated_at || new Date().toISOString(),
+          updatedAt: localFound?.updatedAt || data.updated_at || new Date().toISOString(),
         };
       }
     }
@@ -308,8 +322,12 @@ export async function updateProject(id: string, data: Partial<Omit<Project, "id"
         name_en: data.name,
         name_ta: data.nameTa,
         category: data.category,
+        category_ta: data.categoryTa,
         location: data.location,
+        location_ta: data.locationTa,
         built_up_area: data.area,
+        floors: data.floors,
+        bedrooms: data.bedrooms,
         short_description_en: data.shortDescription,
         short_description_ta: data.shortDescriptionTa,
         overview_en: data.projectOverview,
@@ -317,6 +335,9 @@ export async function updateProject(id: string, data: Partial<Omit<Project, "id"
         published: data.status === "Published",
       };
 
+      if (data.year) {
+        payload.year = parseInt(data.year) || 2026;
+      }
       if (data.coverImage !== undefined) {
         payload.cover_image_url = data.coverImage;
         payload.cover_image_public_id = data.coverImage;
@@ -346,7 +367,15 @@ export async function updateProject(id: string, data: Partial<Omit<Project, "id"
   }
 
   const currentProjects = typeof window !== "undefined" ? loadProjectsFromStorage() : memoryProjects;
-  const index = currentProjects.findIndex((p) => p.id === id || p.slug === id || (data.slug && p.slug === data.slug));
+  let index = currentProjects.findIndex((p) => p.id === id || p.slug === id || (data.slug && p.slug === data.slug));
+
+  if (index === -1) {
+    const mockMatch = initialMockProjects.find((p) => p.id === id || p.slug === id);
+    if (mockMatch) {
+      currentProjects.push({ ...mockMatch });
+      index = currentProjects.length - 1;
+    }
+  }
 
   if (index !== -1) {
     const updated: Project = {
@@ -361,7 +390,7 @@ export async function updateProject(id: string, data: Partial<Omit<Project, "id"
     if (typeof window !== "undefined") {
       saveProjectsToStorage(currentProjects);
     } else {
-      memoryProjects = currentProjects;
+      memoryProjects = updated;
     }
 
     return updated;
