@@ -1,10 +1,13 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { getProjects } from "@/lib/repositories/projects";
+import { getProjects, getProjectById } from "@/lib/repositories/projects";
 import ProjectDetailClient from "@/components/projects/ProjectDetailClient";
 import { siteConfig } from "@/lib/config/site";
 import { JsonLd } from "@/components/seo/JsonLd";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{
@@ -21,10 +24,15 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params;
-  const projects = await getProjects();
-  const project = projects.find(
-    (p) => p.slug === resolvedParams.slug || p.id === resolvedParams.slug
-  );
+  const slugParam = decodeURIComponent(resolvedParams.slug || "");
+  let project = await getProjectById(slugParam);
+
+  if (!project) {
+    const projects = await getProjects();
+    project = projects.find(
+      (p) => p.slug === slugParam || p.id === slugParam || (p.slug && p.slug.toLowerCase() === slugParam.toLowerCase())
+    ) || null;
+  }
 
   if (!project) {
     return {
@@ -68,11 +76,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProjectDetailPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const projects = await getProjects();
-  
-  const project = projects.find(
-    (p) => p.slug === resolvedParams.slug || p.id === resolvedParams.slug
-  );
+  const slugParam = decodeURIComponent(resolvedParams.slug || "");
+  let project = await getProjectById(slugParam);
+
+  if (!project) {
+    const projects = await getProjects();
+    project = projects.find(
+      (p) => p.slug === slugParam || p.id === slugParam || (p.slug && p.slug.toLowerCase() === slugParam.toLowerCase())
+    ) || null;
+  }
 
   if (!project) {
     notFound();
