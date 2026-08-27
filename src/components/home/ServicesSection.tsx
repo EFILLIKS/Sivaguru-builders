@@ -74,7 +74,7 @@ export default function ServicesSection() {
           </div>
           <h2 className="justify-center text-center text-[24px] sm:text-[28px] md:text-[30px] leading-[32px] sm:leading-[38px] font-medium uppercase text-black w-full max-w-[800px] mx-auto">
             <span className="lang-en">What We Build</span>
-            <span className="lang-ta">நாங்கள் கட்டுபவை</span>
+            <span className="lang-ta">எங்கள் சேவைக் கூறுகள்</span>
           </h2>
         </div>
 
@@ -134,6 +134,17 @@ function ServiceCard({ service }: { service: ServiceItem }) {
     setImgSrc(service.image || defaultFallback);
   }, [service.image, defaultFallback]);
 
+  const getTargetCategory = (service: ServiceItem): string => {
+    const title = (service.title || "").toLowerCase();
+    const slug = (service.slug || "").toLowerCase();
+    if (title.includes("interior") || slug.includes("interior")) return "Interior Design";
+    if (title.includes("residential") || slug.includes("residential")) return "Residential";
+    if (title.includes("commercial") || slug.includes("commercial")) return "Commercial";
+    if (title.includes("architect") || slug.includes("architect")) return "Architecture";
+    if (title.includes("reconstruct") || slug.includes("reconstruct")) return "Reconstruct";
+    return service.title;
+  };
+
   return (
     <div className="box-border flex flex-col items-start p-[10px] gap-[15px] sm:gap-[20px] w-[280px] sm:w-[330px] md:w-[386px] bg-white rounded-[20px] border border-gray-100 shadow-lg shrink-0 justify-between self-stretch">
       
@@ -160,16 +171,16 @@ function ServiceCard({ service }: { service: ServiceItem }) {
           </h3>
 
           {/* Description */}
-          <p className="font-['Geologica',sans-serif] font-normal text-[12px] sm:text-[13px] md:text-[14px] leading-[16px] md:leading-[18px] tracking-[0.7px] text-black/60 w-full flex items-center line-clamp-3">
-            <span className="lang-en">{service.description}</span>
-            <span className="lang-ta">{service.descriptionTa || service.description}</span>
+          <p className="font-['Geologica',sans-serif] font-normal text-[12px] sm:text-[13px] md:text-[14px] leading-[18px] md:leading-[20px] tracking-[0.3px] text-black/70 w-full line-clamp-3">
+            <span className="lang-en">{service.description || "Transforming spaces with custom cabinetry, ergonomic layouts, modular kitchens, and ambient lighting tailored to your lifestyle."}</span>
+            <span className="lang-ta">{service.descriptionTa || service.description || "உங்கள் வாழ்க்கை முறைக்கேற்ப தனிப்பயனாக்கப்பட்ட அலமாரிகள், மாடுலர் சமையலறைகள் மற்றும் சூடான விளக்குகளுடன் உங்கள் இடங்களை மாற்றியமைக்கிறோம்."}</span>
           </p>
         </div>
       </div>
 
       {/* Button: padding 16px 20px, height 51px, rounded 12.5px */}
       <div className="w-full pt-2 mt-auto">
-        <Link href={`/projects?category=${encodeURIComponent(service.title.split(" ")[0])}`} className="block w-full">
+        <Link href={`/projects?category=${encodeURIComponent(getTargetCategory(service))}`} className="block w-full">
           <Button theme="light" className="w-full h-[51px] rounded-[12.5px] py-[16px] px-[20px] text-[14px] font-semibold tracking-[0.7px] justify-center">
             <span className="lang-en">Explore</span>
             <span className="lang-ta">ஆராயுங்கள்</span>

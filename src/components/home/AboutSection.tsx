@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { AnimatedHeading } from "@/components/ui/HeadingText";
 import { FadeInBlock } from "@/components/ui/Paratext";
 import { Button } from "@/components/ui/Button";
@@ -75,16 +76,20 @@ export default function AboutSection() {
         {/* Button Action Group */}
         <div className="flex flex-row justify-center items-center gap-[10px]">
           {/* Primary Button */}
-          <Button className="flex justify-center items-center px-5 py-4 w-auto h-[51px] bg-[#F47920] rounded-[12.5px] text-white uppercase text-[14px] font-semibold leading-[17px] tracking-[0.7px]">
-            <span className="lang-en">Get In Touch</span>
-            <span className="lang-ta">எங்களை தொடர்பு கொள்ள</span>
-          </Button>
+          <Link href="/contact">
+            <Button className="flex justify-center items-center px-5 py-4 w-auto h-[51px] bg-[#F47920] rounded-[12.5px] text-white uppercase text-[14px] font-semibold leading-[17px] tracking-[0.7px]">
+              <span className="lang-en">Get In Touch</span>
+              <span className="lang-ta">எங்களை தொடர்பு கொள்ள</span>
+            </Button>
+          </Link>
           
           {/* Secondary Button */}
-          <SecondaryButton>
-            <span className="lang-en">Go To Project</span>
-            <span className="lang-ta">திட்டத்திற்குச் செல்லவும்</span>
-          </SecondaryButton>
+          <Link href="/projects">
+            <SecondaryButton>
+              <span className="lang-en">Go To Project</span>
+              <span className="lang-ta">திட்டத்திற்குச் செல்லவும்</span>
+            </SecondaryButton>
+          </Link>
         </div>
 
       </div>

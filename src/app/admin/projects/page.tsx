@@ -63,17 +63,20 @@ export default function AdminProjectsPage() {
   const columns: Column<Project>[] = [
     {
       header: "Project",
-      cell: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
-            <Image src={row.coverImage} alt={row.name} fill sizes="48px" className="object-cover" />
+      cell: (row) => {
+        const imageSrc = row.coverImage || row.galleryImages?.[0] || "/images/house-image.jpg";
+        return (
+          <div className="flex items-center gap-3">
+            <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
+              <Image src={imageSrc} alt={row.name} fill sizes="48px" className="object-cover" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-semibold text-gray-900">{row.name}</span>
+              <span className="text-xs text-gray-500">{row.location}</span>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <span className="font-semibold text-gray-900">{row.name}</span>
-            <span className="text-xs text-gray-500">{row.location}</span>
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       header: "Category",
@@ -188,43 +191,46 @@ export default function AdminProjectsPage() {
               onAction={() => (window.location.href = "/admin/projects/new")}
             />
           }
-          mobileCardRender={(p) => (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-gray-200 shrink-0">
-                    <Image src={p.coverImage} alt={p.name} fill sizes="48px" className="object-cover" />
+          mobileCardRender={(p) => {
+            const imageSrc = p.coverImage || p.galleryImages?.[0] || "/images/house-image.jpg";
+            return (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
+                      <Image src={imageSrc} alt={p.name} fill sizes="48px" className="object-cover" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 text-sm">{p.name}</h4>
+                      <p className="text-xs text-gray-500">{p.category} · {p.location}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 text-sm">{p.name}</h4>
-                    <p className="text-xs text-gray-500">{p.category} · {p.location}</p>
-                  </div>
+                  <StatusBadge status={p.status} />
                 </div>
-                <StatusBadge status={p.status} />
-              </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-                <button
-                  onClick={() => handleToggleStatus(p)}
-                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg"
-                >
-                  {p.status === "Published" ? "Unpublish" : "Publish"}
-                </button>
-                <Link
-                  href={`/admin/projects/${p.id}/edit`}
-                  className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg"
-                >
-                  Edit
-                </Link>
-                <button
-                  onClick={() => setDeleteId(p.id)}
-                  className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg"
-                >
-                  Delete
-                </button>
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                  <button
+                    onClick={() => handleToggleStatus(p)}
+                    className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg"
+                  >
+                    {p.status === "Published" ? "Unpublish" : "Publish"}
+                  </button>
+                  <Link
+                    href={`/admin/projects/${p.id}/edit`}
+                    className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg"
+                  >
+                    Edit
+                  </Link>
+                  <button
+                    onClick={() => setDeleteId(p.id)}
+                    className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          }}
         />
       )}
 

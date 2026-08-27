@@ -9,7 +9,18 @@ function loadServices(): ServiceItem[] {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: ServiceItem[] = JSON.parse(saved);
+        return parsed.map((item) => {
+          const mock = initialMockServices.find((m) => m.id === item.id || m.slug === item.slug);
+          if (mock) {
+            return {
+              ...item,
+              description: item.description || mock.description,
+              descriptionTa: item.descriptionTa || mock.descriptionTa,
+            };
+          }
+          return item;
+        });
       } catch (e) {
         console.error("Failed to parse services from storage:", e);
       }

@@ -177,14 +177,17 @@ export default function AdminServicesPage() {
     },
     {
       header: "Service Title",
-      cell: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-gray-200 shrink-0">
-            <Image src={row.image} alt={row.title} fill sizes="40px" className="object-cover" />
+      cell: (row) => {
+        const imgSrc = row.image || "/services/residential.jpg";
+        return (
+          <div className="flex items-center gap-3">
+            <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-gray-200 shrink-0">
+              <Image src={imgSrc} alt={row.title} fill sizes="40px" className="object-cover" />
+            </div>
+            <span className="font-semibold text-gray-900">{row.title}</span>
           </div>
-          <span className="font-semibold text-gray-900">{row.title}</span>
-        </div>
-      ),
+        );
+      },
     },
     {
       header: "Description",

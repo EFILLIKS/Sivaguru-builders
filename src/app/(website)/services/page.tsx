@@ -10,16 +10,16 @@ import { siteConfig } from "@/lib/config/site";
 import { JsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-  title: "Construction, Architecture & Interior Services",
+  title: "Construction & Architectural Services",
   description:
-    "Explore our full suite of professional services: Architectural Planning, Residential Construction, Commercial Projects, Interior Design, and Building Reconstruction in Trichy & Tamil Nadu.",
+    "Explore our full suite of professional services: Architectural Planning, Residential Construction, Commercial Projects, Interior Design, and Building Reconstruction in Tamil Nadu.",
   alternates: {
     canonical: "/services",
   },
   openGraph: {
-    title: "Construction, Architecture & Interior Services | Sivaguru Builders",
+    title: "Construction & Architectural Services | Sivaguru Builders",
     description:
-      "Architectural Planning, Residential Construction, Commercial Construction, Interior Design, and Building Reconstruction services across Trichy & Tamil Nadu.",
+      "Architectural Planning, Residential Construction, Commercial Construction, Interior Design, and Building Reconstruction services.",
     url: `${siteConfig.url}/services`,
   },
 };

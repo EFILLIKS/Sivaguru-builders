@@ -113,6 +113,17 @@ export function ImageUploader({
       {/* 1. COVER IMAGE UPLOADER (Only 1 allowed) */}
       {/* ============================================================ */}
       <div className="p-5 bg-gray-50/50 rounded-2xl border border-gray-200 space-y-3">
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          disabled={isUploadingCover}
+          onChange={(e) => {
+            if (e.target.files) handleCoverUpload(e.target.files);
+          }}
+        />
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Star className="w-4 h-4 text-[#F47920] fill-current" />
@@ -154,16 +165,6 @@ export function ImageUploader({
               isUploadingCover ? "opacity-60 cursor-not-allowed border-gray-300" : "border-gray-200 hover:border-[#F47920] hover:bg-[#F47920]/5"
             }`}
           >
-            <input
-              ref={coverInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              disabled={isUploadingCover}
-              onChange={(e) => {
-                if (e.target.files) handleCoverUpload(e.target.files);
-              }}
-            />
             <div className="p-2.5 bg-[#F47920]/10 text-[#F47920] rounded-full mb-2">
               {isUploadingCover ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

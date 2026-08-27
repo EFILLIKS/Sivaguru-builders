@@ -15,12 +15,26 @@ interface ProjectDetailClientProps {
 }
 
 export default function ProjectDetailClient({ project }: ProjectDetailClientProps) {
-  const imagesList = (project.galleryImages && project.galleryImages.length > 0)
-    ? project.galleryImages
-    : [project.coverImage || "/images/house-image.jpg"];
+  const rawList = [project.coverImage, ...(project.galleryImages || [])].filter(
+    (url) => Boolean(url) && typeof url === "string" && url.trim().length > 0
+  );
+  const imagesList = Array.from(new Set(rawList));
+  if (imagesList.length === 0) {
+    imagesList.push("/images/house-image.jpg");
+  }
 
   const [selectedImage, setSelectedImage] = useState(imagesList[0]);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    const newRawList = [project.coverImage, ...(project.galleryImages || [])].filter(
+      (url) => Boolean(url) && typeof url === "string" && url.trim().length > 0
+    );
+    const newList = Array.from(new Set(newRawList));
+    if (newList.length > 0) {
+      setSelectedImage(newList[0]);
+    }
+  }, [project.coverImage, project.galleryImages]);
 
   return (
     <div className="relative min-h-screen bg-[#FFFAFA] text-[#1A1F2A]">
@@ -64,12 +78,14 @@ export default function ProjectDetailClient({ project }: ProjectDetailClientProp
                 <span className="lang-ta">{project.nameTa || project.name}</span>
               </h1>
 
-              {/* Location */}
-              <p className="flex items-center gap-2 text-sm sm:text-base text-gray-600 font-medium">
-                <MapPin className="w-4 h-4 text-[#F47920] shrink-0" />
-                <span className="lang-en">{project.location}</span>
-                <span className="lang-ta">{project.locationTa || project.location}</span>
-              </p>
+              {/* Location (Only rendered if location exists) */}
+              {(Boolean(project.location) || Boolean(project.locationTa)) && (
+                <p className="flex items-center gap-2 text-sm sm:text-base text-gray-600 font-medium">
+                  <MapPin className="w-4 h-4 text-[#F47920] shrink-0" />
+                  <span className="lang-en">{project.location}</span>
+                  <span className="lang-ta">{project.locationTa || project.location}</span>
+                </p>
+              )}
             </div>
 
             {/* Back Button */}

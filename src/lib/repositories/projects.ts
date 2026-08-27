@@ -317,8 +317,9 @@ export async function updateProject(id: string, data: Partial<Omit<Project, "id"
         published: data.status === "Published",
       };
 
-      if (data.coverImage) {
+      if (data.coverImage !== undefined) {
         payload.cover_image_url = data.coverImage;
+        payload.cover_image_public_id = data.coverImage;
       }
       if (gallery !== undefined) {
         payload.gallery_images = gallery;
