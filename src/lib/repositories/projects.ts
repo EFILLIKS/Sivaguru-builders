@@ -390,7 +390,7 @@ export async function updateProject(id: string, data: Partial<Omit<Project, "id"
     if (typeof window !== "undefined") {
       saveProjectsToStorage(currentProjects);
     } else {
-      memoryProjects = updated;
+      memoryProjects = currentProjects;
     }
 
     return updated;
