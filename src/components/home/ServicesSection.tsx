@@ -97,10 +97,12 @@ export default function ServicesSection() {
                 </span>
               </p>
             </div>
-            <Button theme="dark" className="w-full text-[12px] sm:text-[14px]">
-              <span className="lang-en">Start Your Project</span>
-              <span className="lang-ta">உங்கள் திட்டத்தை தொடங்குங்கள்</span>
-            </Button>
+            <Link href="/contact" className="w-full">
+              <Button theme="dark" className="w-full text-[12px] sm:text-[14px]">
+                <span className="lang-en">Start Your Project</span>
+                <span className="lang-ta">உங்கள் திட்டத்தை தொடங்குங்கள்</span>
+              </Button>
+            </Link>
           </div>
 
           {/* Horizontally Animated Cards Container (Under Orange Block on Mobile, Right on Desktop) */}
