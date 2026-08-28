@@ -43,9 +43,9 @@ export function Hero() {
         />
       </div>
 
-      {/* 3. Large 3D-style Brand Name Overlay (SIVAGURU) */}
-      <div className="absolute top-[170px] sm:top-[110px] lg:top-[20px] left-0 w-full flex justify-center z-[3] lg:z-[1] pointer-events-none px-4 overflow-visible">
-        <motion.h1
+      {/* 3. Large Brand Logo Overlay (/logo.svg) */}
+      <div className="absolute top-[220px] sm:top-[90px] lg:top-[0px] left-0 w-full flex justify-center z-[3] lg:z-[1] pointer-events-none px-4 overflow-visible">
+        <motion.div
           initial={{ opacity: 0, y: 50, filter: "blur(12px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={{
@@ -53,16 +53,19 @@ export function Hero() {
             delay: 1.1,
             ease: [0.16, 1, 0.3, 1],
           }}
-          className="font-['Geologica',sans-serif] font-semibold text-[60px] sm:text-[13vw] md:text-[150px] lg:text-[210px] leading-normal tracking-[0.7px] text-center select-none bg-clip-text text-transparent flex items-center justify-center pt-2 pb-1"
-          style={{
-            backgroundImage:
-              "linear-gradient(180deg, #FFFFFF 0%, rgba(255, 220, 178, 0) 100%)",
-          }}
+          className="relative w-full max-w-[280px] sm:max-w-[500px] md:max-w-[700px] lg:max-w-[950px] h-[100px] sm:h-[180px] md:h-[240px] lg:h-[300px] flex items-center justify-center select-none"
         >
-          <span className="lang-en py-1">SIVAGURU</span>
-          <span className="lang-ta pt-4 pb-2 leading-[1.25]">சிவகுரு</span>
-        </motion.h1>
+          <Image
+            src="/logo.svg"
+            alt="Sivaguru Builders Logo"
+            fill
+            priority
+            sizes="(max-width: 768px) 90vw, 950px"
+            className="object-contain"
+          />
+        </motion.div>
       </div>
+
 
       {/* 4. Bottom Green Gradient Frame with Backdrop Blur (Frame 870: 297px on mobile, 278px on desktop) */}
       <div

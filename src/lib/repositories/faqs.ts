@@ -1,5 +1,4 @@
 import { FAQItem } from "@/types/admin";
-import { initialMockFAQs } from "@/lib/mock/data";
 import { createClient } from "@/lib/supabase/client";
 
 const STORAGE_KEY = "sivaguru_faqs_v1";
@@ -15,7 +14,7 @@ function loadFAQs(): FAQItem[] {
       }
     }
   }
-  return [...initialMockFAQs];
+  return [];
 }
 
 function saveFAQs(items: FAQItem[]) {
@@ -25,14 +24,14 @@ function saveFAQs(items: FAQItem[]) {
   }
 }
 
-let memoryFAQs: FAQItem[] = [...initialMockFAQs];
+let memoryFAQs: FAQItem[] = [];
 
 export async function getFAQs(): Promise<FAQItem[]> {
   try {
     const supabase = createClient();
     if (supabase) {
       const { data, error } = await supabase.from("faqs").select("*").order("sort_order", { ascending: true });
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         const mapped: FAQItem[] = data.map((row: any, idx: number) => ({
           id: row.id,
           question: row.question_en || row.question,
@@ -50,6 +49,7 @@ export async function getFAQs(): Promise<FAQItem[]> {
   const items = typeof window !== "undefined" ? loadFAQs() : memoryFAQs;
   return [...items].sort((a, b) => a.displayOrder - b.displayOrder);
 }
+
 
 export async function createFAQ(data: Omit<FAQItem, "id">): Promise<FAQItem> {
   try {

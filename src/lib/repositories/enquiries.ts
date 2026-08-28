@@ -1,5 +1,4 @@
 import { EnquiryItem, EnquiryStatus } from "@/types/admin";
-import { initialMockEnquiries } from "@/lib/mock/data";
 import { createClient } from "@/lib/supabase/client";
 
 const STORAGE_KEY = "sivaguru_enquiries_v1";
@@ -15,7 +14,7 @@ function loadEnquiries(): EnquiryItem[] {
       }
     }
   }
-  return [...initialMockEnquiries];
+  return [];
 }
 
 function saveEnquiries(items: EnquiryItem[]) {
@@ -25,7 +24,7 @@ function saveEnquiries(items: EnquiryItem[]) {
   }
 }
 
-let memoryEnquiries: EnquiryItem[] = [...initialMockEnquiries];
+let memoryEnquiries: EnquiryItem[] = [];
 
 export async function getEnquiries(filters?: {
   search?: string;
@@ -39,7 +38,7 @@ export async function getEnquiries(filters?: {
         query = query.eq("status", filters.status.toLowerCase());
       }
       const { data, error } = await query;
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         const mapped: EnquiryItem[] = data.map((row: any) => ({
           id: row.id,
           name: row.name,
@@ -68,6 +67,7 @@ export async function getEnquiries(filters?: {
   } catch (e) {
     // DB query fallback
   }
+
 
   const items = typeof window !== "undefined" ? loadEnquiries() : memoryEnquiries;
   let results = [...items];

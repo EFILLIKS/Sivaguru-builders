@@ -1,8 +1,8 @@
 import { Project } from "@/types/admin";
-import { initialMockProjects } from "@/lib/mock/data";
 import { createClient } from "@/lib/supabase/client";
 
 const STORAGE_KEY = "sivaguru_projects_v1";
+
 
 function isUuid(str: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -19,7 +19,7 @@ function loadProjectsFromStorage(): Project[] {
       }
     }
   }
-  return [...initialMockProjects];
+  return [];
 }
 
 function saveProjectsToStorage(projects: Project[]) {
@@ -29,7 +29,8 @@ function saveProjectsToStorage(projects: Project[]) {
   }
 }
 
-let memoryProjects: Project[] = [...initialMockProjects];
+let memoryProjects: Project[] = [];
+
 
 function mapDbRowToProject(row: any): Project {
   return {
@@ -78,7 +79,7 @@ export async function getProjects(filters?: {
       }
 
       const { data, error } = await query;
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         let mapped = data.map(mapDbRowToProject);
 
         if (filters?.search) {
@@ -97,6 +98,7 @@ export async function getProjects(filters?: {
   } catch (e) {
     console.error("Supabase getProjects error:", e);
   }
+
 
   // Fallback to local storage only if Supabase returns 0 records or is unreachable
   const localProjects = typeof window !== "undefined" ? loadProjectsFromStorage() : memoryProjects;

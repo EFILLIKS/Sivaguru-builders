@@ -54,7 +54,7 @@ export default function ServicesSection() {
   const x = useTransform(scrollYProgress, [0, 1], [0, -scrollDistance]);
 
   return (
-    <section id="services" ref={targetRef} className="relative h-[250vh] sm:h-[300vh] bg-[#FFFAFA]">
+    <section id="services" ref={targetRef} className="relative h-[250vh] sm:h-[300vh] bg-white">
       <div className="sticky top-0 min-h-screen max-h-screen flex flex-col justify-center items-center overflow-hidden py-6 md:py-10 px-4 md:px-10 lg:px-20 max-w-[1536px] mx-auto w-full gap-4 md:gap-8">
         
         {/* Header (Unified Mobile & Desktop) */}

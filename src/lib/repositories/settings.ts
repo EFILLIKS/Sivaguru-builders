@@ -1,9 +1,28 @@
 import { SiteSettings, UserProfile } from "@/types/admin";
-import { initialMockSettings, initialMockProfile } from "@/lib/mock/data";
 import { createClient } from "@/lib/supabase/client";
 
 const SETTINGS_KEY = "sivaguru_settings_v1";
 const PROFILE_KEY = "sivaguru_profile_v1";
+
+const defaultSettings: SiteSettings = {
+  companyName: "Sivaguru Builders",
+  phone: "+91 7358640561",
+  whatsapp: "+91 7358640561",
+  email: "sivagurubuilders2022@gmail.com",
+  address: "Andavar Street, Kattuputhur, Trichy - 621207, Tamil Nadu",
+  googleMapsUrl: "https://maps.google.com",
+  instagramUrl: "https://instagram.com/sivagurubuilders",
+  facebookUrl: "https://facebook.com/sivagurubuilders",
+  defaultSeoTitle: "Sivaguru Builders | Architecture, Construction & Interior Design in Tamil Nadu",
+  defaultSeoDescription: "Sivaguru Builders offers premium architectural design, custom residential & commercial construction, and luxury interior design across Trichy & Tamil Nadu.",
+};
+
+const defaultProfile: UserProfile = {
+  id: "admin-1",
+  name: "Sivaguru Admin",
+  email: "sivagurubuilders2022@gmail.com",
+  role: "admin",
+};
 
 function loadSettings(): SiteSettings {
   if (typeof window !== "undefined") {
@@ -16,7 +35,7 @@ function loadSettings(): SiteSettings {
       }
     }
   }
-  return { ...initialMockSettings };
+  return { ...defaultSettings };
 }
 
 function saveSettings(settings: SiteSettings) {
@@ -37,7 +56,7 @@ function loadProfile(): UserProfile {
       }
     }
   }
-  return { ...initialMockProfile };
+  return { ...defaultProfile };
 }
 
 function saveProfile(profile: UserProfile) {
@@ -47,8 +66,8 @@ function saveProfile(profile: UserProfile) {
   }
 }
 
-let memorySettings: SiteSettings = { ...initialMockSettings };
-let memoryProfile: UserProfile = { ...initialMockProfile };
+let memorySettings: SiteSettings = { ...defaultSettings };
+let memoryProfile: UserProfile = { ...defaultProfile };
 
 export async function getSettings(): Promise<SiteSettings> {
   try {
@@ -57,16 +76,16 @@ export async function getSettings(): Promise<SiteSettings> {
       const { data, error } = await supabase.from("site_settings").select("*").limit(1).single();
       if (!error && data) {
         return {
-          companyName: data.company_name || initialMockSettings.companyName,
-          phone: data.phone || initialMockSettings.phone,
-          whatsapp: data.whatsapp || initialMockSettings.whatsapp,
-          email: data.email || initialMockSettings.email,
-          address: data.address || initialMockSettings.address,
-          instagramUrl: data.instagram || initialMockSettings.instagramUrl,
-          facebookUrl: data.facebook || initialMockSettings.facebookUrl,
-          googleMapsUrl: data.google_maps_url || initialMockSettings.googleMapsUrl,
-          defaultSeoTitle: initialMockSettings.defaultSeoTitle,
-          defaultSeoDescription: initialMockSettings.defaultSeoDescription,
+          companyName: data.company_name || defaultSettings.companyName,
+          phone: data.phone || defaultSettings.phone,
+          whatsapp: data.whatsapp || defaultSettings.whatsapp,
+          email: data.email || defaultSettings.email,
+          address: data.address || defaultSettings.address,
+          instagramUrl: data.instagram || defaultSettings.instagramUrl,
+          facebookUrl: data.facebook || defaultSettings.facebookUrl,
+          googleMapsUrl: data.google_maps_url || defaultSettings.googleMapsUrl,
+          defaultSeoTitle: defaultSettings.defaultSeoTitle,
+          defaultSeoDescription: defaultSettings.defaultSeoDescription,
         };
       }
     }
@@ -76,6 +95,7 @@ export async function getSettings(): Promise<SiteSettings> {
 
   return typeof window !== "undefined" ? loadSettings() : { ...memorySettings };
 }
+
 
 export async function updateSettings(data: Partial<SiteSettings>): Promise<SiteSettings> {
   try {

@@ -72,7 +72,7 @@ export default function FAQSection() {
   };
 
   return (
-    <section id="faq" className="flex flex-col items-center bg-[#FFFAFA] w-full pt-[100px] px-5 pb-[50px] z-10">
+    <section id="faq" className="flex flex-col items-center bg-white w-full pt-[100px] px-5 pb-[50px] z-10">
       
       {/* Header Container */}
       <div className="flex flex-col items-center gap-[15px] w-full max-w-[1400px] mb-12">

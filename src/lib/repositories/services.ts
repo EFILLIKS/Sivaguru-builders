@@ -1,5 +1,4 @@
 import { ServiceItem } from "@/types/admin";
-import { initialMockServices } from "@/lib/mock/data";
 import { createClient } from "@/lib/supabase/client";
 
 const STORAGE_KEY = "sivaguru_services_v1";
@@ -9,24 +8,13 @@ function loadServices(): ServiceItem[] {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        const parsed: ServiceItem[] = JSON.parse(saved);
-        return parsed.map((item) => {
-          const mock = initialMockServices.find((m) => m.id === item.id || m.slug === item.slug);
-          if (mock) {
-            return {
-              ...item,
-              description: item.description || mock.description,
-              descriptionTa: item.descriptionTa || mock.descriptionTa,
-            };
-          }
-          return item;
-        });
+        return JSON.parse(saved);
       } catch (e) {
         console.error("Failed to parse services from storage:", e);
       }
     }
   }
-  return [...initialMockServices];
+  return [];
 }
 
 function saveServices(items: ServiceItem[]) {
@@ -36,14 +24,15 @@ function saveServices(items: ServiceItem[]) {
   }
 }
 
-let memoryServices: ServiceItem[] = [...initialMockServices];
+let memoryServices: ServiceItem[] = [];
+
 
 export async function getServices(): Promise<ServiceItem[]> {
   try {
     const supabase = createClient();
     if (supabase) {
       const { data, error } = await supabase.from("services").select("*").order("sort_order", { ascending: true });
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         const mapped: ServiceItem[] = data.map((row: any, idx: number) => {
           const slug = (row.slug || "").toLowerCase();
           const fallbackImg = slug.includes("commercial")
@@ -68,7 +57,6 @@ export async function getServices(): Promise<ServiceItem[]> {
           };
         });
 
-        // Also sync local storage so fallback matches DB
         if (typeof window !== "undefined") {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
         }
@@ -79,6 +67,7 @@ export async function getServices(): Promise<ServiceItem[]> {
   } catch (e) {
     // DB query fallback
   }
+
 
   const items = typeof window !== "undefined" ? loadServices() : memoryServices;
   return [...items].sort((a, b) => a.displayOrder - b.displayOrder);

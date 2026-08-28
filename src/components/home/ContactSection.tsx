@@ -64,6 +64,7 @@ export default function ContactSection() {
     setSubmitting(true);
 
     try {
+      // 1. Save to database/backend
       await createEnquiry({
         name: name.trim(),
         email: email.trim(),
@@ -71,6 +72,22 @@ export default function ContactSection() {
         service,
         message: message.trim(),
       });
+
+      // 2. Format WhatsApp pre-filled message
+      const targetPhone = "7358640561"; // Sivaguru Builders contact phone
+      const waText = 
+        `Hello Sivaguru Builders,%0A%0A` +
+        `*New Inquiry from Website:*%0A` +
+        `• *Name:* ${encodeURIComponent(name.trim())}%0A` +
+        `• *Phone:* ${encodeURIComponent(phone.trim())}%0A` +
+        `• *Email:* ${encodeURIComponent(email.trim())}%0A` +
+        `• *Service Needed:* ${encodeURIComponent(service)}%0A` +
+        `• *Message:* ${encodeURIComponent(message.trim())}`;
+
+      const whatsappUrl = `https://wa.me/${targetPhone}?text=${waText}`;
+
+      // 3. Open WhatsApp in new tab
+      window.open(whatsappUrl, "_blank");
 
       setSuccess(true);
       setName("");
@@ -86,6 +103,7 @@ export default function ContactSection() {
       setSubmitting(false);
     }
   };
+
 
   return (
     <section id="contact" className="flex flex-col items-center bg-[#FFFAFA] w-full pt-[100px] px-5 pb-[50px] z-10">
